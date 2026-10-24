@@ -107,6 +107,50 @@ async def run_turn(ws: WebSocket, history: list, text: str, cfg: dict):
 
 @app.websocket("/ws")
 
+async def ws_endpoint(ws: WebSocket, session: str = "default"):
+    await ws.accept()
+    history = SESSIONS.setdefault(session, [])
+    cfg = {"voice": va.VOICE, "speak": True, "language": "en-IN"}
+    try:
+        while True:
+            msg = await ws.receive()
+            if msg["type"] == "websocket.disconnect":
+                break
+            if msg.get("bytes"):  # microphone audio (16 kHz mono WAV)
+                await emit(ws, "state", state="thinking")
+                try:
+                    text = await asyncio.to_thread(transcribe, msg["bytes"], cfg["language"])
+                except sr.UnknownValueError:
+                    await emit(ws, "error", message="Sorry, I couldn't understand that. Please repeat.")
+                    continue
+                except sr.RequestError as exc:
+                    await emit(ws, "error", message=f"Speech recognition service error: {exc}. Try typing instead.")
+                    continue
+                except Exception as exc:
+                    await emit(ws, "error", message=f"Could not read the audio: {exc}")
+                    continue
+                await run_turn(ws, history, text, cfg)
+            elif msg.get("text"):
+                try:
+                    data = json.loads(msg["text"])
+                except json.JSONDecodeError:
+                    continue
+                kind = data.get("type")
+                if kind == "text" and str(data.get("text", "")).strip():
+                    await run_turn(ws, history, str(data["text"]).strip()[:2000], cfg)
+                elif kind == "clear":
+                    history.clear()
+                    await emit(ws, "cleared")
+                    await emit(ws, "state", state="idle")
+                elif kind == "config":
+                    if data.get("voice") in VOICES:
+                        cfg["voice"] = data["voice"]
+                    if isinstance(data.get("speak"), bool):
+                        cfg["speak"] = data["speak"]
+                    if isinstance(data.get("language"), str) and len(data["language"]) <= 8:
+                        cfg["language"] = data["language"]
+    except WebSocketDisconnect:
+        pass
 
 DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 if DIST.exists():  # after `npm run build`, FastAPI serves the site on one port
