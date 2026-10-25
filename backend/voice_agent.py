@@ -60,3 +60,34 @@ VOICE OUTPUT
 - Do not narrate your internal reasoning or tool-call JSON.
 """
 
+
+
+def open_website(url: str) -> str:
+    """Open a validated HTTP or HTTPS URL in the default browser."""
+    url = url.strip()
+
+    if not url or len(url) > 2048:
+        return "Please provide a valid website address."
+
+    if not re.match(r"^https?://", url, re.IGNORECASE):
+        url = "https://" + url
+
+    parsed = urlparse(url)
+
+    if (
+        parsed.scheme not in ("http", "https")
+        or not parsed.hostname
+        or any(char.isspace() for char in parsed.hostname)
+        or parsed.username is not None
+        or parsed.password is not None
+    ):
+        return "That website address is not allowed."
+
+    try:
+        opened = webbrowser.open(url)
+        if opened:
+            return f"Requested opening {url} in your default browser."
+        return "The browser did not confirm opening the website."
+    except Exception as exc:
+        return f"Could not open the website: {exc}"
+
