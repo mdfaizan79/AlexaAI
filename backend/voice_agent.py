@@ -126,3 +126,24 @@ async def synthesize(text: str, voice: str = VOICE) -> bytes:
     )
     return response.content
 
+
+def execute_tool(name: str, arguments_json: str) -> str:
+    """Execute only registered tools and return a serializable result."""
+    function = TOOL_FUNCTIONS.get(name)
+
+    if function is None:
+        return f"Error: tool '{name}' is not registered."
+
+    try:
+        arguments = json.loads(arguments_json)
+
+        if not isinstance(arguments, dict):
+            return "Error: tool arguments must be a JSON object."
+
+        result = function(**arguments)
+        return str(result)
+    except (json.JSONDecodeError, TypeError, ValueError) as exc:
+        return f"Tool execution failed: {exc}"
+    except Exception as exc:
+        return f"Unexpected tool error: {exc}"
+
