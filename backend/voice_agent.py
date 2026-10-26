@@ -91,3 +91,100 @@ def open_website(url: str) -> str:
     except Exception as exc:
         return f"Could not open the website: {exc}"
 
+
+TOOL_FUNCTIONS = {"open_website": open_website}
+
+TOOLS = [
+    {
+        "type": "function",
+        "name": "open_website",
+        "description": "Open a user-requested website in the computer's default browser.",
+        "parameters": {
+            "type": "object",
+            "properties": {
+                "url": {
+                    "type": "string",
+                    "description": "Website URL or domain, such as https://youtube.com.",
+                }
+            },
+            "required": ["url"],
+            "additionalProperties": False,
+        },
+        "strict": True,
+    },
+]
+
+
+async def synthesize(text: str, voice: str = VOICE) -> bytes:
+    """Same TTS call as your speak(), but returns MP3 bytes for the browser."""
+    response = await async_client.audio.speech.create(
+        model=TTS_MODEL,
+        voice=voice,
+        input=text[:4000],
+        instructions="Speak clearly, warmly, naturally, and conversationally.",
+        response_format="mp3",
+    )
+    return response.content
+
+
+def execute_tool(name: str, arguments_json: str) -> str:
+    """Execute only registered tools and return a serializable result."""
+    function = TOOL_FUNCTIONS.get(name)
+
+    if function is None:
+        return f"Error: tool '{name}' is not registered."
+
+    try:
+        arguments = json.loads(arguments_json)
+
+        if not isinstance(arguments, dict):
+            return "Error: tool arguments must be a JSON object."
+
+        result = function(**arguments)
+        return str(result)
+    except (json.JSONDecodeError, TypeError, ValueError) as exc:
+        return f"Tool execution failed: {exc}"
+    except Exception as exc:
+        return f"Unexpected tool error: {exc}"
+
+
+def ask_agent(history: list, user_text: str) -> str:
+    """Run the model and fulfill any requested tool calls."""
+    history.append({"role": "user", "content": user_text})
+
+    for _ in range(8):
+        response = client.responses.create(
+            model=MODEL,
+            instructions=SYSTEM_PROMPT,
+            input=history,
+            tools=TOOLS,
+            parallel_tool_calls=False,
+            max_output_tokens=800,
+        )
+
+        history.extend(response.output)
+
+        calls = [item for item in response.output if item.type == "function_call"]
+
+        if not calls:
+            answer = response.output_text.strip()
+            if not answer:
+                answer = "I couldn't generate a response. Please try again."
+
+            history.append({"role": "assistant", "content": answer})
+            return answer
+
+        for call in calls:
+            print(f"\n[Tool] {call.name}")
+            result = execute_tool(call.name, call.arguments)
+            print(f"[Result] {result}")
+
+            history.append({
+                "type": "function_call_output",
+                "call_id": call.call_id,
+                "output": result,
+            })
+
+    answer = "I reached the tool-call limit for this request. Please try a simpler request."
+    history.append({"role": "assistant", "content": answer})
+    return answer
