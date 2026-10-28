@@ -8,7 +8,6 @@ import os
 import re
 import webbrowser
 from urllib.parse import urlparse
-
 import requests
 from dotenv import load_dotenv
 from openai import AsyncOpenAI, OpenAI
@@ -60,7 +59,7 @@ VOICE OUTPUT
 - Do not narrate your internal reasoning or tool-call JSON.
 """
 
-
+# Open website 
 
 def open_website(url: str) -> str:
     """Open a validated HTTP or HTTPS URL in the default browser."""
@@ -113,7 +112,6 @@ TOOLS = [
         "strict": True,
     },
 ]
-
 
 async def synthesize(text: str, voice: str = VOICE) -> bytes:
     """Same TTS call as your speak(), but returns MP3 bytes for the browser."""
