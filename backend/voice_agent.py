@@ -90,7 +90,6 @@ def open_website(url: str) -> str:
     except Exception as exc:
         return f"Could not open the website: {exc}"
 
-# Tool Calling
 
 TOOL_FUNCTIONS = {"open_website": open_website}
 
