@@ -113,6 +113,8 @@ TOOLS = [
     },
 ]
 
+#synth 
+
 async def synthesize(text: str, voice: str = VOICE) -> bytes:
     """Same TTS call as your speak(), but returns MP3 bytes for the browser."""
     response = await async_client.audio.speech.create(
