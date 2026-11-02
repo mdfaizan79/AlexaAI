@@ -8,6 +8,7 @@ import os
 import re
 import webbrowser
 from urllib.parse import urlparse
+
 import requests
 from dotenv import load_dotenv
 from openai import AsyncOpenAI, OpenAI
@@ -59,7 +60,6 @@ VOICE OUTPUT
 - Do not narrate your internal reasoning or tool-call JSON.
 """
 
-# Open website 
 
 def open_website(url: str) -> str:
     """Open a validated HTTP or HTTPS URL in the default browser."""
@@ -113,6 +113,7 @@ TOOLS = [
     },
 ]
 
+
 async def synthesize(text: str, voice: str = VOICE) -> bytes:
     """Same TTS call as your speak(), but returns MP3 bytes for the browser."""
     response = await async_client.audio.speech.create(
@@ -145,7 +146,6 @@ def execute_tool(name: str, arguments_json: str) -> str:
     except Exception as exc:
         return f"Unexpected tool error: {exc}"
 
-#Agent call
 
 def ask_agent(history: list, user_text: str) -> str:
     """Run the model and fulfill any requested tool calls."""

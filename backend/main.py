@@ -106,7 +106,6 @@ async def run_turn(ws: WebSocket, history: list, text: str, cfg: dict):
 
 
 @app.websocket("/ws")
-
 async def ws_endpoint(ws: WebSocket, session: str = "default"):
     await ws.accept()
     history = SESSIONS.setdefault(session, [])
@@ -151,6 +150,7 @@ async def ws_endpoint(ws: WebSocket, session: str = "default"):
                         cfg["language"] = data["language"]
     except WebSocketDisconnect:
         pass
+
 
 DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
 if DIST.exists():  # after `npm run build`, FastAPI serves the site on one port
