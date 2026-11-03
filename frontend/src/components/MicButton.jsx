@@ -1,5 +1,6 @@
 import { motion } from 'framer-motion'
 
+
 export default function MicButton({ state, onClick }) {
   const on = state === 'listening'
   return (

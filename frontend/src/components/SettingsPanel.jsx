@@ -10,6 +10,7 @@ const Toggle = ({ label, hint, value, onChange }) => (
     </button>
   </div>
 )
+
 const Select = ({ label, value, onChange, options }) => (
   <label className="block text-sm font-medium">{label}
     <select value={value} onChange={(e) => onChange(e.target.value)} className="mt-1.5 w-full rounded-xl border border-white/10 bg-[#0b0d1f] px-3 py-2.5 text-sm font-normal">
