@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { PROMPTS } from '../lib/states'
 
-export default function Composer({ onSend, disabled }) {
+export default function Composer({ onSend, disabled, prompts = PROMPTS }) {
   const [v, setV] = useState('')
   const submit = (e) => { e.preventDefault(); if (!v.trim() || disabled) return; onSend(v); setV('') }
   return (
     <div className="border-t border-white/10 p-3">
       <div className="mb-3 flex gap-2 overflow-x-auto pb-1" role="group" aria-label="Quick prompts">
-        {PROMPTS.map((p) => <button key={p} type="button" className="chip" disabled={disabled} onClick={() => onSend(p)}>{p}</button>)}
+        {prompts.map((p) => <button key={p} type="button" className="chip" disabled={disabled} onClick={() => onSend(p)}>{p}</button>)}
       </div>
       <form onSubmit={submit} className="flex gap-2">
         <input value={v} onChange={(e) => setV(e.target.value)} aria-label="Message Alexa" placeholder="Type a message…" maxLength={2000}

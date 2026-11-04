@@ -7,13 +7,14 @@ import json
 import os
 import re
 import webbrowser
+from pathlib import Path
 from urllib.parse import urlparse
 
 import requests
 from dotenv import load_dotenv
 from openai import AsyncOpenAI, OpenAI
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")  # single .env at repo root
 
 API_KEY = os.getenv("OPENAI_API_KEY")
 MODEL = os.getenv("OPENAI_MODEL", "gpt-4.1")
@@ -114,13 +115,25 @@ TOOLS = [
 ]
 
 
-async def synthesize(text: str, voice: str = VOICE) -> bytes:
-    """Same TTS call as your speak(), but returns MP3 bytes for the browser."""
+async def synthesize(
+    text: str,
+    voice: str = VOICE,
+    instructions_extra: str | None = None,
+) -> bytes:
+    """Same TTS call as your speak(), but returns MP3 bytes for the browser.
+
+    `instructions_extra` (Language Learning Mode) is appended to the base
+    instruction so TTS guidance can be tuned per call without duplicating it.
+    """
+    instructions = "Speak clearly, warmly, naturally, and conversationally."
+    if instructions_extra:
+        instructions = f"{instructions} {instructions_extra}"
+
     response = await async_client.audio.speech.create(
         model=TTS_MODEL,
         voice=voice,
         input=text[:4000],
-        instructions="Speak clearly, warmly, naturally, and conversationally.",
+        instructions=instructions,
         response_format="mp3",
     )
     return response.content
@@ -147,14 +160,21 @@ def execute_tool(name: str, arguments_json: str) -> str:
         return f"Unexpected tool error: {exc}"
 
 
-def ask_agent(history: list, user_text: str) -> str:
-    """Run the model and fulfill any requested tool calls."""
+def ask_agent(history: list, user_text: str, extra_instructions: str | None = None) -> str:
+    """Run the model and fulfill any requested tool calls.
+
+    `extra_instructions` (Language Learning Mode rules) is passed as instructions
+    on every call and never stored inside history, so changing the learning
+    language or mode mid-conversation applies immediately on the next turn.
+    With None the call is identical to the previous behavior.
+    """
+    instructions = SYSTEM_PROMPT + (f"\n\n{extra_instructions}" if extra_instructions else "")
     history.append({"role": "user", "content": user_text})
 
     for _ in range(8):
         response = client.responses.create(
             model=MODEL,
-            instructions=SYSTEM_PROMPT,
+            instructions=instructions,
             input=history,
             tools=TOOLS,
             parallel_tool_calls=False,

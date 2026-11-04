@@ -1,9 +1,12 @@
 import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
+import LanguageCard from './LanguageCard'
 
-export default function Transcript({ messages, thinking }) {
+export default function Transcript({ messages, thinking, replay, define, definition, saveVocab, vocab, settings }) {
   const end = useRef(null)
   useEffect(() => { end.current?.scrollIntoView({ behavior: 'smooth', block: 'end' }) }, [messages, thinking])
+  const showTranslation = settings?.show_translation ?? true
+  const showRomanization = settings?.show_romanization ?? true
   return (
     <div role="log" aria-live="polite" aria-label="Conversation transcript" className="flex-1 space-y-3 overflow-y-auto p-4">
       {!messages.length && (
@@ -14,6 +17,13 @@ export default function Transcript({ messages, thinking }) {
       {messages.map((m) => m.role === 'tool' ? (
         <div key={m.id} className="mx-auto w-fit max-w-full truncate rounded-full border border-violet-400/20 bg-violet-500/10 px-3 py-1 text-xs text-violet-200" title={m.text}>
           Tool {m.name}: {m.text}
+        </div>
+      ) : m.role === 'assistant' && m.lang ? (
+        <div key={m.id} className="flex justify-start">
+          <LanguageCard m={m} replay={replay} define={define} definition={definition} saveVocab={saveVocab}
+            saved={vocab?.some((w) => w.phrase === m.text && w.lang === m.lang)}
+            showTranslation={showTranslation} showRomanization={showRomanization}
+            customs={settings?.custom_langs || []} />
         </div>
       ) : (
         <motion.div key={m.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }}

@@ -1,2 +1,16 @@
-requirements.txt
+# secrets
 .env
+
+# python
+__pycache__/
+*.pyc
+.venv/
+
+# node
+node_modules/
+
+# build output
+dist/
+
+# OS junk
+.DS_Store

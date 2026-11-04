@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useMotionValue } from 'framer-motion'
 import { downsample, encodeWav, mergeChunks } from '../lib/audio'
+import { getLang, SCRIPT_FONT_MAP } from '../lib/languages'
+import { PREVIEW_TEXT } from '../lib/voices'
 
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }
 const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* storage unavailable */ } }
@@ -9,7 +11,15 @@ const sid = (() => {
   if (!s) { s = Math.random().toString(36).slice(2) + Date.now().toString(36); save('alexa-session', s) }
   return s
 })()
-const DEFAULTS = { voice: 'coral', language: 'en-IN', speak: true, autoStop: true }
+const DEFAULTS = {
+  voice: 'coral', language: 'en-IN', speak: true, autoStop: true,
+  // Language Learning Mode
+  learn: false, input_lang: 'en-IN', target_lang: 'kn',
+  level: 'beginner', mode: 'tutor', slow: false,
+  show_translation: true, show_romanization: true,
+  // User-defined languages kept in settings so they are sent on every config.
+  custom_langs: [],
+}
 
 export default function useVoiceAgent() {
   const [state, setStateRaw] = useState('idle')
@@ -18,6 +28,8 @@ export default function useVoiceAgent() {
   const [connected, setConnected] = useState(false)
   const [health, setHealth] = useState(null)
   const [settings, setSettings] = useState(() => ({ ...DEFAULTS, ...load('alexa-settings', {}) }))
+  const [vocab, setVocab] = useState(() => load('alexa-vocab', []))
+  const [definition, setDefinition] = useState(null) // {word, translation, romanization, example, loading}
 
   const level = useMotionValue(0)            // 0..1 live audio level (mic or AI voice)
   const freq = useRef(new Uint8Array(64))    // live frequency data for the waveform
@@ -30,7 +42,10 @@ export default function useVoiceAgent() {
   const addMsg = (m) => setMessages((p) => [...p, { id: idRef.current++, ...m }].slice(-100))
 
   useEffect(() => { save('alexa-messages', messages) }, [messages])
-  useEffect(() => { fetch('/api/health').then((r) => r.json()).then(setHealth).catch(() => setHealth(null)) }, [])
+  useEffect(() => { save('alexa-vocab', vocab) }, [vocab])
+  // Health check also verifies the target really is the Alexa backend: another
+  // app (e.g. a different dev server) bound to the port must be reported clearly.
+  useEffect(() => { fetch('/api/health').then((r) => r.json()).then((h) => setHealth(h && h.app === 'alexa-ai' ? h : { foreign: true })).catch(() => setHealth(null)) }, [])
   useEffect(() => {
     if (state !== 'error') return
     const t = setTimeout(() => stateRef.current === 'error' && setState('idle'), 6000)
@@ -90,8 +105,9 @@ export default function useVoiceAgent() {
         const m = JSON.parse(e.data)
         if (m.type === 'state') setState(m.state)
         else if (m.type === 'user') addMsg({ role: 'user', text: m.text })
-        else if (m.type === 'assistant') addMsg({ role: 'assistant', text: m.text })
+        else if (m.type === 'assistant') addMsg({ role: 'assistant', text: m.text, lang: m.lang, translation: m.translation, romanization: m.romanization, tip: m.tip, correction: m.correction })
         else if (m.type === 'tool') addMsg({ role: 'tool', name: m.name, text: m.result })
+        else if (m.type === 'definition') setDefinition((prev) => (!prev || !prev.word || !m.word || prev.word === m.word || prev.loading ? { ...prev, ...m, loading: false } : prev))
         else if (m.type === 'cleared') setMessages([])
         else if (m.type === 'error') fail(m.message)
       }
@@ -177,5 +193,72 @@ export default function useVoiceAgent() {
   const clear = () => { send({ type: 'clear' }); setMessages([]) }
   const dismissError = () => { setError(null); if (stateRef.current === 'error') setState('idle') }
 
-  return { state, messages, error, connected, health, settings, level, freq, toggleMic, sendText, updateSettings, clear, dismissError }
+  // Learning-mode helpers ----------------------------------------------------
+
+  // Replay a recorded reply as speech (optionally slow) via the speak message.
+  const replay = useCallback((messageId, { slow } = {}) => {
+    const m = messages.find((x) => x.id === messageId)
+    if (!m) return
+    const lang = m.lang || (settingsRef.current.learn ? settingsRef.current.target_lang : settingsRef.current.language)
+    send({ type: 'speak', text: m.text, lang, slow: !!slow })
+  }, [messages])
+
+  // Ask the server to translate/explain one word (result arrives as 'definition').
+  const define = useCallback((word, lang) => {
+    setDefinition({ word, loading: true })
+    send({ type: 'define', word, lang: lang || settingsRef.current.target_lang })
+  }, [])
+
+  const saveVocab = useCallback((entry) => {
+    setVocab((p) => p.some((w) => w.phrase === entry.phrase && w.lang === entry.lang) ? p : [...p, entry])
+  }, [])
+
+  const removeVocab = useCallback((id) => setVocab((p) => p.filter((w) => w.id !== id)), [])
+
+  // Register a user-defined language ({name, native, stt, script, rtl}).
+  // Generates a unique "x-" code, persists it in settings and pushes the whole
+  // custom list to the server on the next config message.
+  const addCustomLang = useCallback((entry) => {
+    const base = 'x-' + String(entry.name || 'custom').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 12)
+    const taken = new Set(settingsRef.current.custom_langs.map((c) => c.code))
+    let code = base || 'x-custom'
+    for (let i = 1; taken.has(code); i++) code = `${base}-${i}` || `${base}-${i}`
+    const lang = {
+      code,
+      name: String(entry.name).slice(0, 60),
+      native: String(entry.native || entry.name).slice(0, 60),
+      stt: String(entry.stt).slice(0, 16),
+      script: entry.script || 'Latin',
+      rtl: !!entry.rtl,
+      font: SCRIPT_FONT_MAP[entry.script] ?? null,
+    }
+    updateSettings({ custom_langs: [...settingsRef.current.custom_langs, lang] })
+    return code
+  }, [])
+
+  // Remove a custom language; fall back to defaults if it was selected.
+  const removeCustomLang = useCallback((code) => {
+    const next = {
+      ...settingsRef.current,
+      custom_langs: settingsRef.current.custom_langs.filter((c) => c.code !== code),
+    }
+    if (settingsRef.current.target_lang === code) next.target_lang = 'kn'
+    if (settingsRef.current.input_lang === code) next.input_lang = 'en-IN'
+    updateSettings(next)
+  }, [])
+
+  // Hear a voice before picking it (server speaks a short sample with that voice).
+  const previewVoice = useCallback((voice) => {
+    send({ type: 'speak', text: PREVIEW_TEXT, lang: settingsRef.current.language || 'en-IN', voice })
+  }, [])
+
+  // Quiz on saved words, one at a time, in the reply (target) language.
+  const practiceVocab = useCallback(() => {
+    const s = settingsRef.current
+    const target = getLang(s.target_lang)?.name || s.target_lang
+    const list = vocab.slice(-10).map((w) => `${w.phrase} (${w.translation || w.romanization || 'no translation'})`).join('; ')
+    sendText(`Quiz me on my saved ${target} words, one at a time. Ask a question, wait for my answer, tell me if I was right, then move to the next. Saved words: ${list}`)
+  }, [vocab, connected, sendText])
+
+  return { state, messages, error, connected, health, settings, level, freq, vocab, definition, toggleMic, sendText, updateSettings, clear, dismissError, replay, define, saveVocab, removeVocab, practiceVocab, addCustomLang, removeCustomLang, previewVoice }
 }
