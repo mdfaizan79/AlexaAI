@@ -63,9 +63,7 @@ async def emit(ws: WebSocket, type_: str, **data):
         json.dumps({"type": type_, **data})
     )
 
-
-
-
+#run turn
 async def run_turn(ws: WebSocket, history: list, text: str, cfg: dict):
     await emit(ws, "user", text=text)
     await emit(ws, "state", state="thinking")

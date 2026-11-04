@@ -20,8 +20,10 @@ export default function Waveform({ freq, state }) {
         g.globalAlpha = 0.35 + (f[bin] / 255) * 0.65
         g.beginPath(); g.roundRect(k * step + step * 0.2, (h - bh) / 2, step * 0.6, bh, step * 0.3); g.fill()
       }
+
       raf = requestAnimationFrame(draw)
     }
+    
     draw()
     return () => { cancelAnimationFrame(raf); ro.disconnect() }
   }, [freq])
