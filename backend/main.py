@@ -149,7 +149,8 @@ async def ws_endpoint(ws: WebSocket, session: str = "default"):
     except WebSocketDisconnect:
         pass
 
+# after `npm run build`, FastAPI serves the site on one port
 
 DIST = Path(__file__).resolve().parent.parent / "frontend" / "dist"
-if DIST.exists():  # after `npm run build`, FastAPI serves the site on one port
+if DIST.exists():  
     app.mount("/", StaticFiles(directory=DIST, html=True), name="web")
