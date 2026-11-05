@@ -14,8 +14,9 @@ const sid = (() => {
   return s
 })()
 const DEFAULTS = {
-  // Language Learning Mode
   
+  // Language Learning Mode
+
   voice: 'coral', language: 'en-IN', speak: true, autoStop: true,
   learn: false, input_lang: 'en-IN', target_lang: 'kn',
   level: 'beginner', mode: 'tutor', slow: false,
