@@ -17,6 +17,7 @@ const DEFAULTS = {
   learn: false, input_lang: 'en-IN', target_lang: 'kn',
   level: 'beginner', mode: 'tutor', slow: false,
   show_translation: true, show_romanization: true,
+
   // User-defined languages kept in settings so they are sent on every config.
   custom_langs: [],
 }
@@ -29,7 +30,8 @@ export default function useVoiceAgent() {
   const [health, setHealth] = useState(null)
   const [settings, setSettings] = useState(() => ({ ...DEFAULTS, ...load('alexa-settings', {}) }))
   const [vocab, setVocab] = useState(() => load('alexa-vocab', []))
-  const [definition, setDefinition] = useState(null) // {word, translation, romanization, example, loading}
+  const [definition, setDefinition] = useState(null) 
+  // {word, translation, romanization, example, loading}
 
   const level = useMotionValue(0)            // 0..1 live audio level (mic or AI voice)
   const freq = useRef(new Uint8Array(64))    // live frequency data for the waveform
