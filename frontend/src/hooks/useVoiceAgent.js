@@ -5,15 +5,18 @@ import { getLang, SCRIPT_FONT_MAP } from '../lib/languages'
 import { PREVIEW_TEXT } from '../lib/voices'
 
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }
-const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { /* storage unavailable */ } }
+const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { 
+  /* storage unavailable */ 
+} }
 const sid = (() => {
   let s = load('alexa-session', null)
   if (!s) { s = Math.random().toString(36).slice(2) + Date.now().toString(36); save('alexa-session', s) }
   return s
 })()
 const DEFAULTS = {
-  voice: 'coral', language: 'en-IN', speak: true, autoStop: true,
   // Language Learning Mode
+  
+  voice: 'coral', language: 'en-IN', speak: true, autoStop: true,
   learn: false, input_lang: 'en-IN', target_lang: 'kn',
   level: 'beginner', mode: 'tutor', slow: false,
   show_translation: true, show_romanization: true,
