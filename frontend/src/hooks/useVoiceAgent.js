@@ -14,15 +14,13 @@ const sid = (() => {
   return s
 })()
 const DEFAULTS = {
-  
-  // Language Learning Mode
 
   voice: 'coral', language: 'en-IN', speak: true, autoStop: true,
   learn: false, input_lang: 'en-IN', target_lang: 'kn',
   level: 'beginner', mode: 'tutor', slow: false,
   show_translation: true, show_romanization: true,
 
-  // User-defined languages kept in settings so they are sent on every config.
+
   custom_langs: [],
 }
 
