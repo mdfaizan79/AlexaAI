@@ -21,7 +21,7 @@ const DEFAULTS = {
   show_translation: true, show_romanization: true,
 
  // User-defined languages kept in settings so they are sent on every config.
- 
+
   custom_langs: [],
 }
 
@@ -49,7 +49,8 @@ export default function useVoiceAgent() {
   useEffect(() => { save('alexa-messages', messages) }, [messages])
   useEffect(() => { save('alexa-vocab', vocab) }, [vocab])
   // Health check also verifies the target really is the Alexa backend: another
-  // app (e.g. a different dev server) bound to the port must be reported clearly.
+  
+  
   useEffect(() => { fetch('/api/health').then((r) => r.json()).then((h) => setHealth(h && h.app === 'alexa-ai' ? h : { foreign: true })).catch(() => setHealth(null)) }, [])
   useEffect(() => {
     if (state !== 'error') return
