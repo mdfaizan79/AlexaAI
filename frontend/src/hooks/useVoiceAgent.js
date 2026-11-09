@@ -34,7 +34,6 @@ export default function useVoiceAgent() {
   const [settings, setSettings] = useState(() => ({ ...DEFAULTS, ...load('alexa-settings', {}) }))
   const [vocab, setVocab] = useState(() => load('alexa-vocab', []))
   const [definition, setDefinition] = useState(null) 
-  // {word, translation, romanization, example, loading}
 
   const level = useMotionValue(0)            // 0..1 live audio level (mic or AI voice)
   const freq = useRef(new Uint8Array(64))    // live frequency data for the waveform
@@ -48,7 +47,7 @@ export default function useVoiceAgent() {
 
   useEffect(() => { save('alexa-messages', messages) }, [messages])
   useEffect(() => { save('alexa-vocab', vocab) }, [vocab])
-  
+
   // app (e.g. a different dev server) bound to the port must be reported clearly.
   // app (e.g. a different dev server) bound to the port must be reported clearly.
   useEffect(() => { fetch('/api/health').then((r) => r.json()).then((h) => setHealth(h && h.app === 'alexa-ai' ? h : { foreign: true })).catch(() => setHealth(null)) }, [])
