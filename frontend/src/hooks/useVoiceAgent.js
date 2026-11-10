@@ -98,7 +98,7 @@ export default function useVoiceAgent() {
   }
 
   // auto-reconnect with WebSocket 
-  
+
   useEffect(() => {
     let closed = false, timer
     const open = () => {
@@ -225,6 +225,7 @@ export default function useVoiceAgent() {
   // Register a user-defined language ({name, native, stt, script, rtl}).
   // Generates a unique "x-" code, persists it in settings and pushes the whole
   // custom list to the server on the next config message.
+
   const addCustomLang = useCallback((entry) => {
     const base = 'x-' + String(entry.name || 'custom').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 12)
     const taken = new Set(settingsRef.current.custom_langs.map((c) => c.code))
@@ -259,7 +260,6 @@ export default function useVoiceAgent() {
     send({ type: 'speak', text: PREVIEW_TEXT, lang: settingsRef.current.language || 'en-IN', voice })
   }, [])
 
-  // Quiz on saved words, one at a time, in the reply (target) language.
   const practiceVocab = useCallback(() => {
     const s = settingsRef.current
     const target = getLang(s.target_lang)?.name || s.target_lang
