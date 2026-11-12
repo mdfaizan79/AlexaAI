@@ -222,7 +222,7 @@ export default function useVoiceAgent() {
 
   const removeVocab = useCallback((id) => setVocab((p) => p.filter((w) => w.id !== id)), [])
 
-  // Register a user-defined language ({name, native, stt, script, rtl}).
+  
   // Generates a unique "x-" code, persists it in settings and pushes the whole
   // custom list to the server on the next config message.
 
