@@ -201,6 +201,7 @@ export default function useVoiceAgent() {
   const dismissError = () => { setError(null); if (stateRef.current === 'error') setState('idle') }
 
   // Replay a recorded reply as speech (optionally slow) via the speak message.
+
   const replay = useCallback((messageId, { slow } = {}) => {
     const m = messages.find((x) => x.id === messageId)
     if (!m) return
@@ -252,10 +253,12 @@ export default function useVoiceAgent() {
     if (settingsRef.current.input_lang === code) next.input_lang = 'en-IN'
     updateSettings(next)
   }, [])
+
  // Hear a voice before picking it (server speaks a short sample with that voice).
   const previewVoice = useCallback((voice) => {
     send({ type: 'speak', text: PREVIEW_TEXT, lang: settingsRef.current.language || 'en-IN', voice })
   }, [])
+  
 // Quiz on saved words, one at a time, in the reply (target) language.
   const practiceVocab = useCallback(() => {
     const s = settingsRef.current
