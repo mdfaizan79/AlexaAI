@@ -6,7 +6,6 @@ import { PREVIEW_TEXT } from '../lib/voices'
 
 const load = (k, d) => { try { return JSON.parse(localStorage.getItem(k)) ?? d } catch { return d } }
 const save = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)) } catch { 
-  /* storage unavailable */ 
 } }
 const sid = (() => {
   let s = load('alexa-session', null)
@@ -258,7 +257,7 @@ export default function useVoiceAgent() {
   const previewVoice = useCallback((voice) => {
     send({ type: 'speak', text: PREVIEW_TEXT, lang: settingsRef.current.language || 'en-IN', voice })
   }, [])
-  
+
 // Quiz on saved words, one at a time, in the reply (target) language.
   const practiceVocab = useCallback(() => {
     const s = settingsRef.current
