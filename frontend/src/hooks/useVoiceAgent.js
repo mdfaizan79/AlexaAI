@@ -19,8 +19,6 @@ const DEFAULTS = {
   level: 'beginner', mode: 'tutor', slow: false,
   show_translation: true, show_romanization: true,
 
- // User-defined languages kept in settings so they are sent on every config.
-
   custom_langs: [],
 }
 
