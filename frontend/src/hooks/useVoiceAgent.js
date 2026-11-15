@@ -75,7 +75,7 @@ export default function useVoiceAgent() {
     if (!s) return
     playing.current = null
     s.onended = null
-    try { s.stop() } catch {  }
+    try { s.stop() } catch { /* already stopped */ }
     active.current = null
   }
 
