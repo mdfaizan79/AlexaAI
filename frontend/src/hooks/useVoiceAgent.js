@@ -148,7 +148,7 @@ export default function useVoiceAgent() {
     ws.current.send(encodeWav(pcm))
     setState('thinking')
   }
-
+// Drives the orb + waveform from real analyser data; also ends recording on silence
   useEffect(() => {
     if (state !== 'listening' && state !== 'speaking') { freq.current.fill(0); level.set(0); return }
     let raf
