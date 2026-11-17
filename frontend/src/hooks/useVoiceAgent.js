@@ -93,7 +93,7 @@ export default function useVoiceAgent() {
       src.start()
     } catch { fail('Could not play the voice reply. Check your browser audio settings.') }
   }
-// auto-reconnect with WebSocket 
+
   useEffect(() => {
     let closed = false, timer
     const open = () => {
