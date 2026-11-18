@@ -176,7 +176,7 @@ export default function useVoiceAgent() {
   const toggleMic = useCallback(() => {
     if (stateRef.current === 'listening') finishRef.current()
     else if (stateRef.current !== 'thinking') startListening()
-  }, [connected]) 
+  }, [connected]) // eslint-disable-line react-hooks/exhaustive-deps
 
   const sendText = (text) => {
     if (!text.trim() || !connected || stateRef.current === 'thinking') return
