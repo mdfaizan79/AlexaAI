@@ -194,7 +194,7 @@ export default function useVoiceAgent() {
   const clear = () => { send({ type: 'clear' }); setMessages([]) }
   const dismissError = () => { setError(null); if (stateRef.current === 'error') setState('idle') }
 
-  // Replay a recorded reply as speech (optionally slow) via the speak message.
+
 
   const replay = useCallback((messageId, { slow } = {}) => {
     const m = messages.find((x) => x.id === messageId)
