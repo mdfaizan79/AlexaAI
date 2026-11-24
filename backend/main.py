@@ -224,7 +224,7 @@ def parse_json_reply(raw: str, keys: tuple[str, ...]) -> dict:
         out[key] = value.strip() if isinstance(value, str) and value.strip() else None
 
     if not out[keys[0]]:
-        
+        # Model produced unusable JSON: keep the raw text as the answer.
         return {keys[0]: raw}
     return out
 
