@@ -151,7 +151,6 @@ def build_language_instructions(cfg: dict) -> str:
     input_name = lang_name(cfg, input_code)
     target_name = lang_name(cfg, target_code)
 
-    # Same-language pair always means practice in that language.
     mode = "practice" if input_code == target_code else cfg["mode"]
     level = cfg["level"]
 

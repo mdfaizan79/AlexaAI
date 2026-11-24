@@ -246,7 +246,7 @@ export default function useVoiceAgent() {
     updateSettings(next)
   }, [])
 
- // Hear a voice before picking it (server speaks a short sample with that voice).
+
   const previewVoice = useCallback((voice) => {
     send({ type: 'speak', text: PREVIEW_TEXT, lang: settingsRef.current.language || 'en-IN', voice })
   }, [])
