@@ -31,6 +31,7 @@ export default function App() {
   const inputLang = getLang(a.settings.input_lang, customs)
   const targetLang = getLang(a.settings.target_lang, customs)
   const prompts = a.settings.learn ? LEARNING_PROMPTS : PROMPTS
+// Learning hint overrides the default listening hint while learn is on.
   const hint = a.settings.learn
     ? `Listening in ${inputLang?.name || a.settings.input_lang}, Alexa replies in ${targetLang ? `${targetLang.native} (${targetLang.name})` : a.settings.target_lang}`
     : s.hint
