@@ -235,6 +235,7 @@ export default function useVoiceAgent() {
     return code
   }, [])
 
+  // Remove a custom language; fall back to defaults if it was selected.
   const removeCustomLang = useCallback((code) => {
     const next = {
       ...settingsRef.current,
