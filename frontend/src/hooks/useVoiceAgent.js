@@ -251,7 +251,7 @@ export default function useVoiceAgent() {
     send({ type: 'speak', text: PREVIEW_TEXT, lang: settingsRef.current.language || 'en-IN', voice })
   }, [])
 
-// Quiz on saved words, one at a time, in the reply (target) language.
+
   const practiceVocab = useCallback(() => {
     const s = settingsRef.current
     const target = getLang(s.target_lang)?.name || s.target_lang
